@@ -1,0 +1,32 @@
+# Tool configuration only — this is not a packaged distribution. The server is
+# run as a script (stdio) or copied into an image (HTTP); there is nothing to
+# build or install from here.
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+# conftest.py must set the environment before importing server.py, so tests/
+# has to be importable as a plain directory rather than a package.
+pythonpath = ["tests", "."]
+filterwarnings = ["error"]
+
+[tool.ruff]
+line-length = 104
+target-version = "py312"
+
+[tool.ruff.lint]
+select = [
+    "E",    # pycodestyle
+    "F",    # pyflakes
+    "W",    # warnings
+    "I",    # import sorting
+    "B",    # bugbear — mutable defaults, silent except, loop-variable capture
+    "UP",   # pyupgrade
+    "S",    # bandit
+]
+ignore = [
+    "S101",  # assert: the test suite is built on it
+]
+
+[tool.ruff.lint.per-file-ignores]
+# conftest deliberately imports after mutating os.environ.
+"tests/*" = ["E402"]

@@ -1,0 +1,25 @@
+# Keeps the SHA-pinned actions and the pinned dependencies from rotting.
+#
+# Pinning without automated bumps is how a project ends up on a two-year-old
+# action that nobody noticed: the pin is the security property, the bumps are
+# what keep it from becoming a liability.
+version: 2
+updates:
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: monthly
+    commit-message:
+      prefix: "chore"
+
+  - package-ecosystem: pip
+    directory: /
+    schedule:
+      interval: monthly
+    commit-message:
+      prefix: "chore"
+    # requirements.txt is generated; a PR editing it without requirements.in
+    # would be reverted by the next pip-compile. Dependabot updates the input
+    # and CI's lockfile check catches the mismatch.
+    allow:
+      - dependency-type: direct

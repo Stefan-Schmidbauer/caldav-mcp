@@ -1,0 +1,9 @@
+{
+  "mcpServers": {
+    "caldav": {
+      "type": "http",
+      "url": "https://mcp.example.net/caldav-mcp",
+      "headers": { "Authorization": "Bearer your-bearer-token" }
+    }
+  }
+}

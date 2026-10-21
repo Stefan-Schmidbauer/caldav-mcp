@@ -1,0 +1,7 @@
+# Allowlist, not a blocklist: the image needs exactly the two files the
+# Dockerfile COPYs. The build context is streamed to the remote daemon over SSH,
+# so this keeps it small — and a new directory, a virtualenv or a secret file
+# (.env.*, deploy.env, .mcp.json) can never end up in it by being forgotten here.
+*
+!server.py
+!requirements.txt

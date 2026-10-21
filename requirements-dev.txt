@@ -1,0 +1,25 @@
+# Development and CI only — never installed into the image.
+#
+# Deliberately *not* hash-pinned, unlike requirements.txt: nothing here reaches
+# the deployed server. Exact versions still, so CI does not start failing on a
+# release nobody chose.
+
+pytest==9.1.1
+ruff==0.16.9
+
+# The CalDAV server tests/test_caldav.py runs the service against, in-process.
+# Without it those tests are skipped.
+radicale==3.8.3
+
+# Regenerates requirements.txt with hashes — see the header of requirements.in.
+# 7.6.1 is a floor, not just the current version: 7.6.0 imports
+# pip._internal.utils.compat.stdlib_pkgs, which pip 26 removed, so pip-compile
+# died on the runner's own pip before reading a single requirement.
+pip-tools==7.6.1
+# Pinned because pip-tools does not cap it: under click 8.5.0, pip-compile
+# writes a spurious `--no-index` into the lockfile's header comment, so CI's
+# lockfile check fails on a requirements.txt that is otherwise identical.
+click==8.4.2
+
+# Reports known CVEs against the pinned production set.
+pip-audit==2.10.1

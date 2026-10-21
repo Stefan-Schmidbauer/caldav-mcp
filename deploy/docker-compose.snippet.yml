@@ -1,0 +1,61 @@
+# Service definition for the CalDAV MCP server.
+#
+# This is a *snippet*, not a standalone stack: it is meant to be pasted, under
+# `services:`, into the compose file the server already runs.
+#
+# The image is built by `deploy.sh` through a remote Docker context — there is
+# deliberately no `build:` key, so the server needs no source checkout. It is
+# therefore local-only, which is what `pull_policy: never` below is for.
+#
+# Adjust: the published port, the hostnames in MCP_ALLOWED_HOSTS /
+# MCP_ALLOWED_ORIGINS, the timezone, and the network name at the bottom — `web` has to
+# be one the target compose file already declares. Drop the `networks:` key
+# entirely if the stack uses only its implicit default network.
+
+  caldav-mcp:
+    image: caldav-mcp:local
+    # The image lives only in this daemon's local store — no registry holds it.
+    # Without `pull_policy: never`, `docker compose pull` fails on this service
+    # ("pull access denied") and aborts the pull for the whole stack.
+    pull_policy: never
+    container_name: caldav-mcp
+    # The image defines its own HEALTHCHECK against /healthz, which compose
+    # inherits — so `restart: always` also recovers a server that is up but no
+    # longer answering. Nothing to declare here.
+    restart: always
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+          cpus: '0.5'
+        reservations:
+          memory: 64M
+          cpus: '0.1'
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    read_only: true
+    tmpfs:
+      - /tmp:noexec,nosuid,nodev
+    ports:
+      # Localhost only — exposed to the outside by a TLS reverse proxy.
+      - "127.0.0.1:9153:8000"
+    env_file:
+      - ./.env.caldav-mcp
+    environment:
+      - MCP_TRANSPORT=streamable-http
+      - MCP_HOST=0.0.0.0
+      - MCP_PORT=8000
+      # Path the reverse proxy mounts the server under. Named after the service
+      # so a generic /mcp stays free for other MCP servers on the same host.
+      - MCP_PATH=/caldav-mcp
+      # The zone the tools speak in: "10:00" in a tool call is 10:00 there. The
+      # container runs in UTC otherwise, and every event lands an hour or two off.
+      - TZ=Europe/Berlin
+      # The SDK's DNS-rebinding protection checks the Host header, so the
+      # hostname the reverse proxy serves under must be listed here.
+      - MCP_ALLOWED_HOSTS=your-host.example.net,127.0.0.1:9153,localhost:9153
+      - MCP_ALLOWED_ORIGINS=https://your-host.example.net
+    networks:
+      - web

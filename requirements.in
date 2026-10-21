@@ -1,0 +1,23 @@
+# Direct dependencies. `requirements.txt` is *generated* from this file, with
+# hashes, and is the file that gets installed — never edit it by hand.
+#
+#     pip-compile --generate-hashes --strip-extras requirements.in
+#
+# Why hashes and not just pins: deploy.sh builds on the *remote* Docker daemon,
+# from a context streamed over SSH, with no registry and no source checkout on
+# the server. Exact versions make two builds install the same version numbers;
+# hashes make them install the same bytes, which is what
+# `pip install --require-hashes` in the Dockerfile enforces.
+#
+# Bumping a version is a deliberate step: edit here, re-run pip-compile, and
+# commit both files together. CI fails if the two no longer match.
+
+mcp==2.2.0
+caldav==3.1.0
+uvicorn==0.54.0
+
+# Both come with caldav, at these versions. Listed because server.py imports
+# them itself — to build events, and to find one occurrence of a series — so a
+# caldav release that drops or swaps one must not take them away unnoticed.
+icalendar==7.3.0
+recurring-ical-events==3.8.2

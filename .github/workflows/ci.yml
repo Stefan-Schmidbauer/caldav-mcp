@@ -1,0 +1,68 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+# Read-only: nothing here publishes. The release workflow is the only one that
+# needs write access.
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      # Actions are pinned to a commit SHA, not a moving major tag: a tag can be
+      # repointed by whoever owns the repository. Dependabot proposes the bumps
+      # (see .github/dependabot.yml), so the pins do not rot.
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: '3.12'   # matches the Dockerfile's base image
+
+      - name: Install
+        run: |
+          # --require-hashes on the production set, exactly as the image does:
+          # a lockfile that no longer verifies should fail here, not at deploy.
+          pip install --require-hashes -r requirements.txt
+          pip install -r requirements-dev.txt
+
+      - name: Lint
+        run: ruff check .
+
+      - name: Test
+        run: pytest -q
+
+      - name: Verify the lockfile matches requirements.in
+        run: |
+          # A regenerated lockfile that was not committed is the failure mode
+          # this catches — the image would then install something the repo does
+          # not describe.
+          cp requirements.txt requirements.txt.committed
+          pip-compile --generate-hashes --strip-extras --quiet requirements.in
+          diff -u requirements.txt.committed requirements.txt \
+            || { echo '::error::requirements.txt is stale — re-run pip-compile and commit it'; exit 1; }
+
+  audit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: '3.12'
+
+      # Reports known CVEs against the pinned production set. Separate job so a
+      # newly-published advisory is visible as its own red mark rather than
+      # looking like a broken test.
+      - name: Audit dependencies
+        run: |
+          # From requirements-dev.txt, which already pins pip-audit — naming the
+          # version here too would be a second place to keep in step. The
+          # advisory data is fetched at run time, so a pinned tool still reports
+          # today's CVEs.
+          pip install -r requirements-dev.txt
+          pip-audit -r requirements.txt

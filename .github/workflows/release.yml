@@ -1,0 +1,30 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      # Pinned to a commit SHA — a major tag can be repointed by whoever owns
+      # the repository, and this job holds contents: write.
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      # Deliberately no `files:` — this repo ships no artefact. The server is
+      # deployed as an image built by deploy.sh on the target's own Docker
+      # daemon, so there is nothing to attach that anyone would install.
+      #
+      # The release is here for the version number alone: a name to refer to in
+      # issues and docs, and the anchor deploy.sh turns into a readable image
+      # tag via `git describe` (see "Deployment" in the README) instead of a
+      # bare commit SHA nobody can place.
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@efb35369e0ad2afab669f228072c1b0d510eae64 # v3.0.3
+        with:
+          generate_release_notes: true
