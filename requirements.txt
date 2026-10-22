@@ -22,9 +22,9 @@ attrs==26.1.0 \
     # via
     #   jsonschema
     #   referencing
-caldav==3.1.0 \
-    --hash=sha256:0b6dc76a462c0c32a6dbdc537eda832226bd4d9dacf3906247626b68db5b10b6 \
-    --hash=sha256:9d6713f75273bc82f58e2fb7684ecb8196f09ee309609d36577c1c5eec22152b
+caldav==3.5.0 \
+    --hash=sha256:413c7f81d7c4b13db98ef01f4bf29660de53f526af265b583ff6a59628432e52 \
+    --hash=sha256:9ce1a15ec48a3a6bad73c9bdd44073f01b5a499bd43fc2710b5181a291a75f61
     # via -r requirements.in
 cffi==2.1.1 \
     --hash=sha256:046bfc24911b37851ee1b51aab8bffe713d89c68c6a057b09484ce9fd5f69b4e \
@@ -397,9 +397,9 @@ icalendar==7.3.0 \
     #   icalendar-searcher
     #   recurring-ical-events
     #   x-wr-timezone
-icalendar-searcher==1.0.6 \
-    --hash=sha256:2440d4d0d9fbe0021a6647916853744dbca179abd39d25c742ebb8442bbc1bc3 \
-    --hash=sha256:649aad558df211bc50ca3dea3646e1b2f3e93f0995bca2b6358e9c79031471b6
+icalendar-searcher==1.3.0 \
+    --hash=sha256:3492a5d3c30705bd5386b05760bb8ec63b855aa6766ff230431b13b4c39f34b6 \
+    --hash=sha256:9cf9b881c54b596bf5867e226fd7044603a124d6bb3cf879171854d39027475e
     # via caldav
 idna==3.20 \
     --hash=sha256:a7db850025b95ded1eae8a46181a1a6c56c92c96f0e2b005d9ff8dc0210cab44 \
