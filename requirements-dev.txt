@@ -15,7 +15,7 @@ radicale==3.8.3
 # 7.6.1 is a floor, not just the current version: 7.6.0 imports
 # pip._internal.utils.compat.stdlib_pkgs, which pip 26 removed, so pip-compile
 # died on the runner's own pip before reading a single requirement.
-pip-tools==7.6.1
+pip-tools==7.6.2
 # Pinned because pip-tools does not cap it: under click 8.5.0, pip-compile
 # writes a spurious `--no-index` into the lockfile's header comment, so CI's
 # lockfile check fails on a requirements.txt that is otherwise identical.
