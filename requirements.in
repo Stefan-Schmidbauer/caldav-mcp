@@ -12,7 +12,7 @@
 # Bumping a version is a deliberate step: edit here, re-run pip-compile, and
 # commit both files together. CI fails if the two no longer match.
 
-mcp==2.2.0
+mcp==2.3.0
 caldav==3.1.0
 uvicorn==0.54.0
 
