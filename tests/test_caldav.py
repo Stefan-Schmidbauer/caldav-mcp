@@ -158,6 +158,24 @@ def test_a_task_list_is_not_offered_as_a_calendar(account):
     assert sorted(c["name"] for c in server_module.list_calendars()) == ["Familie", "Privat"]
 
 
+def test_a_calendar_left_out_of_caldav_calendars_is_out_of_reach(account, monkeypatch):
+    familie = server_module.create_event("Schule", "2026-10-12T08:00", calendar="Familie")
+    privat = server_module.create_event("Zahnarzt", "2026-10-12T10:00", calendar="Privat")
+    privat_url = next(c["url"] for c in server_module.list_calendars() if c["name"] == "Privat")
+    # By name or by url, the way a deployment lists them.
+    for allowed in (["privat"], [privat_url]):
+        monkeypatch.setattr(server_module, "CALDAV_CALENDARS", allowed)
+        server_module._service.calendars(refresh=True)
+        assert [c["name"] for c in server_module.list_calendars()] == ["Privat"]
+        listed = server_module.list_events("2026-10-12", "2026-10-12")
+        assert titles(listed) == [(privat["start"], "Zahnarzt")]
+        assert server_module.search_events("Schule", "2026-10-01", "2026-10-31")["events"] == []
+        with pytest.raises(ToolError, match="Unknown calendar"):
+            server_module.list_events("2026-10-12", "2026-10-12", calendar="Familie")
+        with pytest.raises(ToolError, match="Invalid event URI"):
+            server_module.delete_event(familie["uri"])
+
+
 def test_what_is_created_is_what_is_listed(account):
     timed = server_module.create_event(
         "Zahnarzt", "2026-10-12T10:00", location="Hauptstr. 1, München",

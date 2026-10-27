@@ -17,7 +17,8 @@ the same for tasks, and is built and deployed the same way.
 - **Events live on a CalDAV server** as `VEVENT` items. The server connects on
   the first tool call, with the account from its environment.
 - **Reading covers every calendar** of the account that holds events — pure
-  task lists are left out. A tool call can name one calendar, by its name or
+  task lists are left out, and so is any calendar `CALDAV_CALENDARS` does not
+  list. A tool call can name one calendar, by its name or
   its `url`.
 - **`uri`** is the handle for an event. Always obtain it from `list_events` or
   `search_events` before changing or deleting an event.
@@ -115,6 +116,7 @@ wiring is set in [`deploy/docker-compose.snippet.yml`](deploy/docker-compose.sni
 | `CALDAV_USERNAME` | **Required.** |
 | `CALDAV_PASSWORD` | **Required.** Use an app password where the server offers one |
 | `CALDAV_CALENDAR_URL` | The calendar new events go to when `create_event` names none — a `url` from `list_calendars`. Not needed with a single calendar |
+| `CALDAV_CALENDARS` | Comma-separated: the only calendars the server offers, each a `url` from `list_calendars` or a calendar's name. Empty: every calendar of the account. A calendar left out can be neither read nor changed — e.g. the work calendar for an assistant, but not the family's |
 | `TZ` | IANA name (e.g. `Europe/Berlin`) of the zone the tools speak in. Set in the snippet — without it the container runs in UTC and every event lands an hour or two off |
 | `MCP_AUTH_TOKEN` | **Required.** Clients send `Authorization: Bearer <token>`. Without it the server refuses to start. Generate with `openssl rand -hex 32` |
 | `MCP_PATH` | The path the endpoint is served under — `/caldav-mcp` in the snippet |

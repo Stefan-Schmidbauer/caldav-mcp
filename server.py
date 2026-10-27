@@ -33,8 +33,13 @@ CALDAV_USERNAME = os.getenv("CALDAV_USERNAME", "")
 CALDAV_PASSWORD = os.getenv("CALDAV_PASSWORD", "")
 # The calendar new events go to when create_event names none. Optional: an
 # account with a single calendar needs no default, and reading always covers
-# every calendar.
+# every calendar the server offers.
 CALDAV_CALENDAR_URL = os.getenv("CALDAV_CALENDAR_URL", "")
+# The calendars the server offers at all, comma-separated: each a `url` from
+# list_calendars or a calendar's name. Empty: every calendar of the account.
+# A client can neither read nor change one that is not listed — the way to let
+# an assistant at the work calendar but not at the family's.
+CALDAV_CALENDARS = [c.strip() for c in os.getenv("CALDAV_CALENDARS", "").split(",") if c.strip()]
 # IANA name (e.g. Europe/Berlin) of the zone the tools speak in: "10:00" in a
 # tool call is 10:00 there, and results are shown in it. Read from the standard
 # TZ variable, which sets the container's local time as well. A container runs
@@ -336,8 +341,10 @@ class CalDAVService:
             for cal in self._principal.get_calendars():
                 if self._holds_events(cal):
                     url = str(cal.url)
-                    calendars[url] = cal
-                    names[url] = cal.get_display_name() or url
+                    name = cal.get_display_name() or url
+                    if _offered(url, name):
+                        calendars[url] = cal
+                        names[url] = name
             self._calendars, self._names = calendars, names
         return [{"url": url, "name": self._names[url]} for url in self._calendars]
 
@@ -506,6 +513,19 @@ def _parts(url: str) -> tuple[tuple[str, str | None, int | None], str]:
     split = urlsplit(url)
     origin = (split.scheme, split.hostname, split.port or _DEFAULT_PORTS.get(split.scheme))
     return origin, unquote(split.path).rstrip("/")
+
+
+def _offered(url: str, name: str) -> bool:
+    """Whether CALDAV_CALENDARS lets a calendar through; without it every one is.
+
+    Every tool goes through the calendar list, so a calendar left out here is
+    out of reach entirely: not listed, not read, not named, and an event URI
+    inside it is refused by _calendar_of.
+    """
+    if not CALDAV_CALENDARS:
+        return True
+    return any(_parts(entry) == _parts(url) if "://" in entry else entry.casefold() == name.casefold()
+               for entry in CALDAV_CALENDARS)
 
 
 def _without_default_port(url: str) -> str:
