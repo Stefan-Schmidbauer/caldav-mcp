@@ -5,7 +5,7 @@
 # release nobody chose.
 
 pytest==9.2.0
-ruff==0.17.1
+ruff==0.17.4
 
 # The CalDAV server tests/test_caldav.py runs the service against, in-process.
 # Without it those tests are skipped.
