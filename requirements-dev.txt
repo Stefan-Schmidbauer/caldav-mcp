@@ -9,7 +9,7 @@ ruff==0.17.1
 
 # The CalDAV server tests/test_caldav.py runs the service against, in-process.
 # Without it those tests are skipped.
-radicale==3.8.3
+radicale==3.9.0
 
 # Regenerates requirements.txt with hashes — see the header of requirements.in.
 # 7.6.1 is a floor, not just the current version: 7.6.0 imports
