@@ -15,6 +15,44 @@ jobs:
       # Pinned to a commit SHA — a major tag can be repointed by whoever owns
       # the repository, and this job holds contents: write.
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          # The whole history and its tags — the notes are built from the
+          # commits since the previous tag.
+          fetch-depth: 0
+
+      # The notes are the commit messages since the previous tag — they already
+      # say what changed and why, so there is no changelog file to keep in step.
+      # GitHub's generated notes list merged pull requests only, and most
+      # changes here go to main directly. feat and fix keep their body (the
+      # why); everything else is listed by subject. The attribution trailers
+      # are dropped.
+      - name: Build release notes from the commits
+        run: |
+          prev=$(git describe --tags --abbrev=0 "${GITHUB_REF_NAME}^" 2>/dev/null || true)
+          range=${prev:+${prev}..}${GITHUB_REF_NAME}
+          git log --no-merges --format='%h%x1f%s%x1f%b%x1e' "$range" | python3 -c '
+          import sys
+          out = []
+          for entry in sys.stdin.read().split("\x1e"):
+              if not entry.strip():
+                  continue
+              sha, subject, body = entry.strip("\n").split("\x1f")
+              out.append(f"- {subject} ({sha})")
+              if subject.split(":")[0].rstrip("!") in ("feat", "fix"):
+                  lines = [l for l in body.strip().splitlines()
+                           if not l.startswith(("Co-Authored-By:", "\U0001f916 Generated with"))]
+                  text = "\n".join(lines).strip()
+                  if text:
+                      out.append("")
+                      out.extend(f"  {l}" if l else "" for l in text.splitlines())
+                      out.append("")
+          print("\n".join(out).rstrip())
+          ' > "$RUNNER_TEMP/notes.md"
+          if [ -n "$prev" ]; then
+              printf '\n**Full changelog:** %s/%s/compare/%s...%s\n' \
+                  "$GITHUB_SERVER_URL" "$GITHUB_REPOSITORY" "$prev" "$GITHUB_REF_NAME" >> "$RUNNER_TEMP/notes.md"
+          fi
+          cat "$RUNNER_TEMP/notes.md"
 
       # Deliberately no `files:` — this repo ships no artefact. The server is
       # deployed as an image built by deploy.sh on the target's own Docker
@@ -27,4 +65,4 @@ jobs:
       - name: Create GitHub Release
         uses: softprops/action-gh-release@efb35369e0ad2afab669f228072c1b0d510eae64 # v3.0.3
         with:
-          generate_release_notes: true
+          body_path: ${{ runner.temp }}/notes.md
