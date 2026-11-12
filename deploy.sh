@@ -124,6 +124,17 @@ info "Waiting for the server to answer"
 for i in $(seq 1 15); do
     if ssh "$DEPLOY_HOST" "curl -sf -o /dev/null '${HEALTH_URL}'"; then
         info "Healthy — deployed ${IMAGE}:${TAG}"
+        # The compose file is the admin's and this script never touches it, so a
+        # missing TZ there would survive every deploy unnoticed: nothing fails,
+        # every time is just an hour or two off. A warning, not an error — the
+        # deploy itself went through.
+        CONTAINER_TZ=$(ssh "$DEPLOY_HOST" "docker exec '${SERVICE}' printenv TZ" || true)
+        if [ -n "$CONTAINER_TZ" ]; then
+            info "Timezone: ${CONTAINER_TZ}"
+        else
+            printf '\033[1;33mWARNING:\033[0m TZ is not set for %s in %s — times are in UTC. Add TZ (e.g. TZ=Europe/Berlin) to its environment: and run the deploy again.\n' \
+                "$SERVICE" "$REMOTE_COMPOSE" >&2
+        fi
         exit 0
     fi
     sleep 1
