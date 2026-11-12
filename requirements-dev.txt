@@ -4,7 +4,7 @@
 # the deployed server. Exact versions still, so CI does not start failing on a
 # release nobody chose.
 
-pytest==9.1.1
+pytest==9.2.0
 ruff==0.17.1
 
 # The CalDAV server tests/test_caldav.py runs the service against, in-process.
