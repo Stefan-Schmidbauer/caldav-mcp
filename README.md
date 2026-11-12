@@ -250,7 +250,7 @@ fails on this service and aborts the pull for the whole stack.
 | It exits with `ZoneInfoNotFoundError` | `TZ` is not an IANA name such as `Europe/Berlin` |
 | `Invalid event URI` or `Unknown calendar` | The value was not taken from `list_events` / `list_calendars`. The server accepts nothing else — see [Security model](#security-model) |
 | `No default calendar` | Several calendars and no `CALDAV_CALENDAR_URL` — set it, or name the calendar in the request |
-| Events are an hour or two off | `TZ` is not set |
+| Events are an hour or two off, or times come back as `+00:00` | `TZ` is not set in the service's `environment:` — the startup log and `deploy.sh` warn about it; check with `docker exec caldav-mcp printenv TZ`. Older compose files may still carry `CALENDAR_TIMEZONE`, which the server no longer reads; rename it to `TZ` and recreate the container |
 | It exits with `MCP_AUTH_TOKEN is not set` | The server refuses to run without a token. Set one in the env file |
 | `401 unauthorized` | Token missing or wrong. The header is exactly `Authorization: Bearer <token>` |
 | `421 Invalid Host header` | The hostname the request arrives under is not in `MCP_ALLOWED_HOSTS` |

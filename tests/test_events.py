@@ -410,3 +410,24 @@ def test_a_left_out_date_is_written_the_way_the_series_writes_its_start(start, m
     written = server_module._as_written(start, moment)
     assert written == expected
     assert getattr(written, "tzinfo", None) == getattr(expected, "tzinfo", None)
+
+
+TIMEZONE_WARNINGS = {
+    "zone set": ("Europe/Berlin", None, None),
+    "zone missing": ("", None, "TZ is not set"),
+    "only the old name": ("", "Europe/Berlin", "rename it to TZ"),
+    "both names": ("Europe/Berlin", "Europe/Berlin", "CALENDAR_TIMEZONE is ignored"),
+}
+
+
+@pytest.mark.parametrize("timezone,legacy,expected", TIMEZONE_WARNINGS.values(),
+                         ids=list(TIMEZONE_WARNINGS))
+def test_a_missing_zone_is_logged(caplog, timezone, legacy, expected):
+    """Without TZ nothing fails — every time is just off — so the log is the
+    only place it shows; an old CALENDAR_TIMEZONE must not pass for a setting."""
+    with caplog.at_level("WARNING", logger="caldav-mcp"):
+        server_module._warn_about_timezone(timezone, legacy)
+    if expected is None:
+        assert not caplog.records
+    else:
+        assert expected in caplog.text

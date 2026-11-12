@@ -908,9 +908,34 @@ def _bearer_check_or_refuse(token: str, allow_unauthenticated: bool) -> bool:
     return False
 
 
+def _warn_about_timezone(timezone: str, legacy: str | None) -> None:
+    """Say so in the log when the zone falls back to the container's.
+
+    Nothing fails without TZ — every time is just an hour or two off, with a
+    +00:00 an assistant tends to read past. CALENDAR_TIMEZONE is the name early
+    compose files used; it is no longer read, so it now silently means nothing.
+    """
+    if timezone:
+        if legacy:
+            logger.warning("CALENDAR_TIMEZONE is ignored — TZ=%s is the zone in use.", timezone)
+        return
+    if legacy:
+        logger.warning(
+            "CALENDAR_TIMEZONE=%s is no longer read — rename it to TZ. Times are in "
+            "the container's zone (usually UTC) until then.", legacy)
+    else:
+        logger.warning(
+            "TZ is not set — times are in the container's zone (usually UTC), so "
+            "events land an hour or two off. Set TZ, e.g. TZ=Europe/Berlin.")
+
+
 def _run_http() -> None:
     import uvicorn
     from mcp.server.transport_security import TransportSecuritySettings
+
+    # Only here: under stdio the server runs on the user's own machine, whose
+    # zone is the right one without TZ.
+    _warn_about_timezone(TIMEZONE, os.getenv("CALENDAR_TIMEZONE"))
 
     # Before anything binds a port: an unauthenticated endpoint must not come up
     # far enough to answer a single request.
