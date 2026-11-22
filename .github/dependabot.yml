@@ -9,6 +9,11 @@ updates:
     directory: /
     schedule:
       interval: monthly
+    # Only propose releases that are at least a week old: hijacked packages
+    # are usually caught and pulled within days, so the delay keeps them out.
+    # Security updates ignore the cooldown and still arrive immediately.
+    cooldown:
+      default-days: 7
     commit-message:
       prefix: "chore"
 
@@ -16,6 +21,8 @@ updates:
     directory: /
     schedule:
       interval: monthly
+    cooldown:
+      default-days: 7
     commit-message:
       prefix: "chore"
     # requirements.txt is generated; a PR editing it without requirements.in
